@@ -15,21 +15,6 @@ function broadcastData( wsServer, data, skipClient = null ) {
   } );
 }
 
-function clearOldestSnippets( limit ) {
-  db.run( `
-    DELETE
-    FROM snippets
-    WHERE snippet_id IN (
-      SELECT snippet_id
-      FROM snippets
-      ORDER BY snippet_id DESC
-      LIMIT -1 OFFSET ?
-    );
-  `, [
-    limit,
-  ] );
-}
-
 function packSnippetPayload( id, time, flatness ) {
   const info = new Uint32Array( [id, time] ).buffer;
   const data = new Uint8Array( info.byteLength + flatness.length );
@@ -62,14 +47,16 @@ function packSnippetPayload( id, time, flatness ) {
     console.log( 'Listening on %d', serverPort );
   } );
 
-  const wsServer = new WebSocketServer( { server } );
+  const wsServer = new WebSocketServer( { server, maxPayload : 1024 } );
   wsServer.on( 'connection', wsClient => {
     db.each( `
       SELECT
         snippet_id,
         snippet_time,
         snippet_flatness
-      FROM snippets;
+      FROM snippets
+      ORDER BY snippet_id DESC
+      LIMIT 1000;
     `, ( error, row ) => {
       if ( error ) {
         throw error;
@@ -84,6 +71,7 @@ function packSnippetPayload( id, time, flatness ) {
       wsClient.send( data, { binary : true } );
     } );
 
+    wsClient.on( 'error', error => console.error( error ) );
     wsClient.on( 'message', buffer => {
       const snippetTime = Math.round( Date.now() / 1000 );
       const snippetFlatness = new Uint8Array( buffer );
