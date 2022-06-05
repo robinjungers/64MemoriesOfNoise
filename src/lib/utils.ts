@@ -1,4 +1,4 @@
-import { min, max, mean } from 'lodash';
+import { min, max, mean, shuffle } from 'lodash';
 
 export function lerp( x : number, a : number, b : number, c : number, d : number ) : number {
     return c + ( d - c ) * ( x - a ) / ( b - a );
@@ -54,4 +54,16 @@ export function bytesToFloats( array : Float32Array, min : number, max : number 
     return Float32Array.from( array, ( x : number ) => {
         return lerp( x, 0, 255, min, max );
     } );
+}
+
+export function makeRandomChoiceGen<T>( items : T[] ) : () => T {
+    let shuffledItems : T[] = [];
+
+    return () => {
+        if ( shuffledItems.length === 0 ) {
+            shuffledItems = shuffle( items );
+        }
+
+        return shuffledItems.pop()!;
+    };
 }
