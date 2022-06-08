@@ -1,0 +1,28 @@
+#app
+{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  min-height: 100vh;
+  font-family: 'Hershey-Noailles-Futura';
+  font-weight: 400;
+  font-size: 12px;
+  text-transform: uppercase;
+  background-color: hsl(0, 0%, 80%);
+  letter-spacing: 1px;
+}
+#records > * + *
+{
+  margin-top: 1px;
+}
+.details
+{
+  background-color: hsl(0, 0%, 20%);
+  color: hsl(0, 0%, 65%);
+  padding: 2px 2px 1px;
+}
+.details > * + *::before
+{
+  content: ' ';
+}

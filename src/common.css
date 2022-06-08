@@ -1,6 +1,7 @@
 html, body,
 div, span,
-button, canvas
+button, canvas,
+ul, ol, li
 {
     margin: 0;
     padding: 0;
@@ -11,6 +12,10 @@ button, canvas
     color: inherit;
     letter-spacing: inherit;
     line-height: inherit;
+}
+ul, ol, li
+{
+    list-style: none;
 }
 button
 {

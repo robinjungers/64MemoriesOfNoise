@@ -5,7 +5,6 @@ import AudioAnalyzer from './lib/AudioAnalyzer';
 import Graph from './lib/Graph';
 import SocketHandler from './lib/SocketHandler';
 import { floatsToBytes } from './lib/utils';
-import { noop } from 'lodash';
 
 class App {
   private socket : SocketHandler;
@@ -17,7 +16,7 @@ class App {
   private isRecording : boolean = false;
 
   constructor() {
-    this.socket = new SocketHandler( noop );
+    this.socket = new SocketHandler();
     this.analyzer = new AudioAnalyzer();
     this.mixer = new AudioMixer();
 

@@ -3,8 +3,9 @@ precision mediump float;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
+uniform float shiverProgress;
 
-in vec2 position;
+in vec3 position;
 in vec2 value;
 
 out float intensity;
@@ -21,10 +22,10 @@ float rand( vec2 co )
 
 void main()
 {
-  // vec2 pos = rand( position );
   intensity = 1.0 - value.y;
   intensity = intensity * intensity;
+  // intensity = abs( value.x - shiverProgress );
 
-  gl_PointSize = mix( 2.0, 16.0, intensity );
-  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 0.0, 1.0 );
+  gl_PointSize = mix( 15.0, 1.0, intensity );
+  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 }

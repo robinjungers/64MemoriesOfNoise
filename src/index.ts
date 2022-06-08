@@ -1,28 +1,44 @@
 import './common.css';
 import './index.css';
+import AnimClock from './lib/AnimClock';
 import Canvas from './lib/Canvas';
 import Snippet from './lib/Snippet';
 import SocketHandler from './lib/SocketHandler';
+import { lerp } from './lib/utils';
+
+const SHIVER_DURATION = 4e3;
 
 class App {
-  private snippets : Map<number, Snippet>;
+  private animClock : AnimClock;
   private canvas : Canvas;
   private socket : SocketHandler;
 
   constructor() {
-    this.snippets = new Map<number, Snippet>();
+    this.animClock = new AnimClock( this.onUpdate.bind( this ) );
     this.canvas = new Canvas( document.querySelector( '#app' ) as HTMLDivElement );
-    this.socket = new SocketHandler( this.onNewSnippet.bind( this ) );
+    this.socket = new SocketHandler(
+      this.onNewBeat.bind( this ),
+      this.onNewSnippet.bind( this ),
+    );
   }
 
-  private onNewSnippet( id : number, time : number, flatness : Uint8Array ) {
-    const snippet = new Snippet( id, time, flatness );
+  private onUpdate( time : number, shiverPosition : number ) {
+    // this.socket.snippets.forEach( ( snippet : Snippet ) => {
+    //   const time 
+    // } );
 
-    this.snippets.set( id, snippet );
+    this.canvas.draw( time );
+  }
+
+  private onNewBeat() {
+    this.animClock.triggerShiver( SHIVER_DURATION );
+  }
+
+  private onNewSnippet( snippet : Snippet ) {
     this.canvas.addSnippet( snippet );
   }
 }
 
 window.addEventListener( 'DOMContentLoaded', () => {
-  const app = new App();
+  new App();
 } );

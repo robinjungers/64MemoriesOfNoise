@@ -7,6 +7,7 @@ module.exports = defineConfig( {
       input : [
         resolve( __dirname, './index.html' ),
         resolve( __dirname, './ear.html' ),
+        resolve( __dirname, './dir.html' ),
       ],
     },
   },

@@ -4,6 +4,18 @@ const { WebSocket, WebSocketServer } = require( 'ws' );
 const app = express();
 const sqlite3 = require( 'sqlite3' );
 
+const MESSAGE_TYPE_SNIPPET = 0;
+const MESSAGE_TYPE_BEAT = 1;
+const BEAT_INTERVAL = 5e3;
+
+function startBeat( wsServer ) {
+  setInterval( () => {
+    const data = packBeatPayload();
+
+    broadcastData( wsServer, data );
+  }, BEAT_INTERVAL );
+}
+
 function broadcastData( wsServer, data, skipClient = null ) {
   wsServer.clients.forEach( wsClient => {
     if (
@@ -15,11 +27,18 @@ function broadcastData( wsServer, data, skipClient = null ) {
   } );
 }
 
+function packBeatPayload() {
+  console.log( "Packing beat" );
+
+  return new Uint8Array( [MESSAGE_TYPE_BEAT] );
+}
+
 function packSnippetPayload( id, time, flatness ) {
   const info = new Uint32Array( [id, time] ).buffer;
-  const data = new Uint8Array( info.byteLength + flatness.length );
-  data.set( new Uint8Array( info ), 0 );
-  data.set( new Uint8Array( flatness ), info.byteLength );
+  const data = new Uint8Array( 1 + info.byteLength + flatness.length );
+  data[0] = MESSAGE_TYPE_SNIPPET;
+  data.set( new Uint8Array( info ), 1 );
+  data.set( new Uint8Array( flatness ), 1 + info.byteLength );
 
   console.log( "Packing snippet:", id, time, flatness.length );
 
@@ -30,7 +49,7 @@ function packSnippetPayload( id, time, flatness ) {
   const dbPath = path.join( __dirname, './data.db' );
   const db = new sqlite3.Database( dbPath );
 
-  await db.run( `
+  db.run( `
     CREATE TABLE IF NOT EXISTS snippets (
       snippet_id INTEGER PRIMARY KEY AUTOINCREMENT,
       snippet_time INTEGER NOT NULL,
@@ -49,26 +68,28 @@ function packSnippetPayload( id, time, flatness ) {
 
   const wsServer = new WebSocketServer( { server, maxPayload : 1024 } );
   wsServer.on( 'connection', wsClient => {
-    db.each( `
-      SELECT
-        snippet_id,
-        snippet_time,
-        snippet_flatness
-      FROM snippets
-      ORDER BY snippet_id DESC
-      LIMIT 1000;
-    `, ( error, row ) => {
-      if ( error ) {
-        throw error;
-      }
+    db.serialize( () => {
+      db.each( `
+        SELECT
+          snippet_id,
+          snippet_time,
+          snippet_flatness
+        FROM snippets
+        ORDER BY snippet_id DESC
+        LIMIT 1000;
+      `, ( error, row ) => {
+        if ( error ) {
+          throw error;
+        }
 
-      const data = packSnippetPayload(
-        row['snippet_id'],
-        row['snippet_time'],
-        row['snippet_flatness'],
-      );
+        const data = packSnippetPayload(
+          row['snippet_id'],
+          row['snippet_time'],
+          row['snippet_flatness'],
+        );
 
-      wsClient.send( data, { binary : true } );
+        wsClient.send( data, { binary : true } );
+      } );
     } );
 
     wsClient.on( 'error', error => console.error( error ) );
@@ -76,23 +97,27 @@ function packSnippetPayload( id, time, flatness ) {
       const snippetTime = Math.round( Date.now() / 1000 );
       const snippetFlatness = new Uint8Array( buffer );
       
-      db.run( `
-        INSERT INTO snippets (
-          snippet_time,
-          snippet_flatness
-        ) VALUES ( ?, ? );
-      `, [
-        snippetTime,
-        snippetFlatness,
-      ], function() {
-        const data = packSnippetPayload(
-          this.lastID,
+      db.serialize( () => {
+        db.run( `
+          INSERT INTO snippets (
+            snippet_time,
+            snippet_flatness
+          ) VALUES ( ?, ? );
+        `, [
           snippetTime,
           snippetFlatness,
-        );
+        ], function() {
+          const data = packSnippetPayload(
+            this.lastID,
+            snippetTime,
+            snippetFlatness,
+          );
 
-        broadcastData( wsServer, data );
+          broadcastData( wsServer, data );
+        } );
       } );
     } );
   } );
+
+  startBeat( wsServer );
 } )();
