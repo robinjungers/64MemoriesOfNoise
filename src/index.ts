@@ -4,9 +4,6 @@ import AnimClock from './lib/AnimClock';
 import Canvas from './lib/Canvas';
 import Snippet from './lib/Snippet';
 import SocketHandler from './lib/SocketHandler';
-import { lerp } from './lib/utils';
-
-const SHIVER_DURATION = 4e3;
 
 class App {
   private animClock : AnimClock;
@@ -15,23 +12,22 @@ class App {
 
   constructor() {
     this.animClock = new AnimClock( this.onUpdate.bind( this ) );
-    this.canvas = new Canvas( document.querySelector( '#app' ) as HTMLDivElement );
+    
     this.socket = new SocketHandler(
       this.onNewBeat.bind( this ),
       this.onNewSnippet.bind( this ),
     );
+
+    const canvasContainer = document.querySelector( '#app' ) as HTMLDivElement;
+    this.canvas = new Canvas( this.socket.snippets, canvasContainer );
   }
 
-  private onUpdate( time : number, shiverPosition : number ) {
-    // this.socket.snippets.forEach( ( snippet : Snippet ) => {
-    //   const time 
-    // } );
-
+  private onUpdate( time : number ) {
     this.canvas.draw( time );
   }
 
-  private onNewBeat() {
-    this.animClock.triggerShiver( SHIVER_DURATION );
+  private onNewBeat( snippet : Snippet ) {
+    this.animClock.triggerShiver( snippet );
   }
 
   private onNewSnippet( snippet : Snippet ) {

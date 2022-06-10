@@ -3,14 +3,16 @@ import * as THREE from 'three';
 import Snippet from './Snippet';
 import SimplexNoise from 'simplex-noise';
 import noiseTexURL from '../images/noise.png?url'
-import bgVert from '../shaders/bg_vert.glsl?raw';
+import quadVert from '../shaders/quad_vert.glsl?raw';
 import bgFrag from '../shaders/bg_frag.glsl?raw';
+import blurFrag from '../shaders/blur_frag.glsl?raw';
+import composeFrag from '../shaders/compose_frag.glsl?raw';
 
-function setupBackground() {
+function setupBackground() : THREE.Mesh {
   const texture = new THREE.TextureLoader().load( noiseTexURL );
   const geometry = new THREE.PlaneGeometry( 2.0, 2.0 );
   const material = new THREE.RawShaderMaterial( {
-    vertexShader : bgVert,
+    vertexShader : quadVert,
     fragmentShader : bgFrag,
     uniforms : {
       noiseTex : { value : texture },
@@ -22,21 +24,61 @@ function setupBackground() {
   return new THREE.Mesh( geometry, material );
 }
 
+function setupFinalQuad() : THREE.Mesh {
+  const geometry = new THREE.PlaneGeometry( 2.0, 2.0 );
+  const material = new THREE.RawShaderMaterial( {
+    vertexShader : quadVert,
+    fragmentShader : composeFrag,
+    uniforms : {
+      tex0 : { value : null },
+      tex1 : { value : null },
+    },
+  } );
+  
+  return new THREE.Mesh( geometry, material );
+}
+
+function setupBlurQuad() : THREE.Mesh {
+  const geometry = new THREE.PlaneGeometry( 2.0, 2.0 );
+  const material = new THREE.RawShaderMaterial( {
+    vertexShader : quadVert,
+    fragmentShader : blurFrag,
+    uniforms : {
+      tex : { value : null },
+      resolution : { value : new THREE.Vector2( 0.0, 0.0 ) },
+    },
+  } );
+  
+  return new THREE.Mesh( geometry, material );
+}
+
 export default class Canvas {
   private renderer : THREE.WebGLRenderer;
   private camera : THREE.OrthographicCamera;
   private background : THREE.Mesh;
-  private scene : THREE.Scene;
+  private fullScene : THREE.Scene;
+  private fullTarget : THREE.WebGLRenderTarget;
+  private highlightTarget : THREE.WebGLRenderTarget;
+  private blurTarget : THREE.WebGLRenderTarget;
+  private blurQuad : THREE.Mesh;
+  private finalQuad : THREE.Mesh;
   private simplex : SimplexNoise;
+  private pixelSize : THREE.Vector2;
+  private snippets : Snippet[];
 
-  constructor( container : HTMLDivElement ) {
+  constructor( snippets : Snippet[], container : HTMLDivElement ) {
+    this.snippets = snippets;
+
     const w = window.innerWidth;
     const h = window.innerHeight;
+
+    this.pixelSize = new THREE.Vector2();
 
     this.renderer = new THREE.WebGLRenderer( { antialias : false } );
     this.renderer.autoClear = false;
     this.renderer.setPixelRatio( window.devicePixelRatio );
     this.renderer.setSize( w, h );
+    this.renderer.getDrawingBufferSize( this.pixelSize );
 
     container.appendChild( this.renderer.domElement );
 
@@ -49,9 +91,15 @@ export default class Canvas {
 
     this.background = setupBackground();
 
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color( 0xc4c4c4 );
-    this.scene.add( this.background );
+    this.fullScene = new THREE.Scene();
+    this.fullTarget = new THREE.WebGLRenderTarget( w, h );
+
+    this.highlightTarget = new THREE.WebGLRenderTarget( w, h );
+
+    this.blurTarget = new THREE.WebGLRenderTarget( w, h );
+    this.blurQuad = setupBlurQuad();
+
+    this.finalQuad = setupFinalQuad();
 
     this.simplex = new SimplexNoise();
 
@@ -62,6 +110,7 @@ export default class Canvas {
     const w = window.innerWidth;
     const h = window.innerHeight;
     this.renderer.setSize( w, h );
+    this.renderer.getDrawingBufferSize( this.pixelSize );
 
     const ratio = w / h;
     this.camera.left = -ratio;
@@ -75,27 +124,39 @@ export default class Canvas {
     bgUniforms.focusCenter.value.setX( this.simplex.noise2D( 0.0001 * time, 34.8 ) );
     bgUniforms.focusCenter.value.setY( this.simplex.noise2D( 0.0001 * time, 71.3 ) );
 
+    this.snippets.forEach( ( snippet : Snippet ) => {
+      snippet.shaderTime = time;
+      snippet.shaderScale = 1e-3 * this.pixelSize.y;
+      snippet.shaderShowHighlight = false;
+    } );
+
+    this.renderer.setRenderTarget( this.fullTarget );
+    this.renderer.clear();
+    this.renderer.render( this.background, this.camera );
+    this.renderer.render( this.fullScene, this.camera );
+
+    this.renderer.setRenderTarget( this.highlightTarget );
+    this.renderer.clear();
+    this.snippets.forEach( ( snippet : Snippet ) => void ( snippet.shaderShowHighlight = true ) );
+    this.renderer.render( this.fullScene, this.camera );
+
+    this.renderer.setRenderTarget( this.blurTarget );
+    this.renderer.clear();
+    const blurUniforms = ( this.blurQuad.material as any ).uniforms;
+    blurUniforms.tex.value = this.highlightTarget.texture;
+    blurUniforms.resolution.value.setX( this.pixelSize.x );
+    blurUniforms.resolution.value.setY( this.pixelSize.y );
+    this.renderer.render( this.blurQuad, this.camera );
+
     this.renderer.setRenderTarget( null );
     this.renderer.clear();
-    this.renderer.render( this.scene, this.camera );
-  }
-
-  applyShiverProgress( snippet : Snippet, progress : number ) {
-    const object = this.scene.getObjectByName( snippet.sceneName );
-
-    if ( !object ) {
-      throw 'Undefined snippet mesh';
-    }
-
-    const mesh = ( object as THREE.Mesh );
-    const material = ( mesh.material as any );
-    
-    material.uniforms.shiverProgress.value = progress;
+    const finalUniforms = ( this.finalQuad.material as any ).uniforms;
+    finalUniforms.tex0.value = this.fullTarget.texture;
+    finalUniforms.tex1.value = this.blurTarget.texture;
+    this.renderer.render( this.finalQuad, this.camera );
   }
 
   addSnippet( snippet : Snippet ) {
-    const points = snippet.makeCanvasPoints();
-
-    this.scene.add( points );
+    this.fullScene.add( snippet.points );
   }
 }

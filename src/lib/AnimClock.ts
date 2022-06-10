@@ -1,10 +1,11 @@
 import * as TWEEN from '@tweenjs/tween.js';
+import AnimShiver from './AnimShiver';
+import Snippet from './Snippet';
 
-type UpdateCallback = ( time : number, shiverPosition : number ) => void;
+type UpdateCallback = ( time : number ) => void;
 
 export default class AnimClock {
-  private shiverTween : TWEEN.Tween<AnimClock> | null = null;
-  private shiverPosition : number = 0.0;
+  private shivers : Set<AnimShiver> = new Set<AnimShiver>();
   private onUpdate? : UpdateCallback;
 
   constructor( onUpdate? : UpdateCallback ) {
@@ -13,13 +14,14 @@ export default class AnimClock {
     window.requestAnimationFrame( this.update.bind( this ) );
   }
 
-  triggerShiver( duration : number ) {
-    this.shiverTween?.stop();
-    this.shiverPosition = 0.0;
-    this.shiverTween = new TWEEN.Tween<AnimClock>( this );
-    this.shiverTween.to( { shiverPosition : 1.0 }, duration );
-    this.shiverTween.easing( TWEEN.Easing.Linear.None );
-    this.shiverTween.start();
+  triggerShiver( snippet : Snippet ) {
+    const shiver = new AnimShiver( snippet, () => {
+      this.shivers.delete( shiver );
+    } );
+    
+    shiver.start();
+
+    this.shivers.add( shiver );
   }
 
   private update( time : number ) {
@@ -27,6 +29,6 @@ export default class AnimClock {
 
     TWEEN.update( time );
 
-    this.onUpdate?.( time, this.shiverPosition );
+    this.onUpdate?.( time );
   }
 }

@@ -1,26 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap');
+
 #app
 {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100vw;
-  min-height: 100vh;
-  font-family: 'Hershey-Noailles-Futura';
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Major Mono Display', monospace;
   font-weight: 400;
-  font-size: 12px;
-  text-transform: uppercase;
-  background-color: hsl(0, 0%, 80%);
-  letter-spacing: 1px;
+  font-size: 0.9vh;
+  text-transform: lowercase;
+  background-color: hsl(0, 0%, 12%);
+  letter-spacing: 0.08em;
 }
 #records > * + *
 {
-  margin-top: 1px;
+  margin-top: 0.2em;
 }
 .details
 {
-  background-color: hsl(0, 0%, 20%);
-  color: hsl(0, 0%, 65%);
+  position: relative;
+  white-space: nowrap;
+  color: hsl(0, 0%, 70%);
   padding: 2px 2px 1px;
+}
+.details::before
+{
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0.5em;
+  left: -0.7em;
+  width: 0.4em;
+  height: 0.4em;
+  background-color: hsl(0, 0%, 20%);
+  border-radius: 50%;
 }
 .details > * + *::before
 {

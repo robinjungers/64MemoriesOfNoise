@@ -23,10 +23,16 @@ function formatTime( time : Date ) : string {
   return `${d} ${t}`;
 }
 
-function formatBytes( size : number ) : string {
+function formatSize( size : number ) : string {
   const s = size.toString().padStart( 4, '0' );
 
-  return `${s.substring( 0, 1 )},${s.substring( 1 )}kb`;
+  return `${s}b`;
+}
+
+function formatData( data : Uint8Array ) : string {
+  return Array.from( data, ( value : number ) => {
+    return value.toString( 16 ).padStart( 2, '0' );
+  } ).join( '' );
 }
 
 class App {
@@ -50,14 +56,14 @@ class App {
     timeElement.classList.add( 'detail', 'detail-time' );
     timeElement.innerText = formatTime( snippet.displayTime );
 
-    const dataElement = document.createElement( 'span' );
-    dataElement.classList.add( 'detail', 'detail-data' );
-    dataElement.innerText = formatBytes( snippet.flatness.length );
+    const sizeElement = document.createElement( 'span' );
+    sizeElement.classList.add( 'detail', 'detail-size' );
+    sizeElement.innerText = formatSize( snippet.flatness.length );
 
     const itemElement = document.createElement( 'li' );
     itemElement.classList.add( 'details' );
     itemElement.appendChild( timeElement );
-    itemElement.appendChild( dataElement );
+    itemElement.appendChild( sizeElement );
 
     this.container.append( itemElement )
   }

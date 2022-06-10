@@ -1,44 +1,59 @@
 const path = require( 'path' );
 const express = require( 'express' );
+const sumBy = require( 'lodash/sumBy' );
 const { WebSocket, WebSocketServer } = require( 'ws' );
 const app = express();
 const sqlite3 = require( 'sqlite3' );
 
 const MESSAGE_TYPE_SNIPPET = 0;
 const MESSAGE_TYPE_BEAT = 1;
-const BEAT_INTERVAL = 5e3;
+const BEAT_INTERVAL = 500;
 
 function startBeat( wsServer ) {
   setInterval( () => {
-    const data = packBeatPayload();
+    const position = Math.random();
+    const data = packBeatPayload( position );
 
     broadcastData( wsServer, data );
   }, BEAT_INTERVAL );
 }
 
-function broadcastData( wsServer, data, skipClient = null ) {
+function broadcastData( wsServer, data ) {
   wsServer.clients.forEach( wsClient => {
-    if (
-      wsClient !== skipClient &&
-      wsClient.readyState === WebSocket.OPEN
-    ) {
-      wsClient.send( data );
+    if ( wsClient.readyState === WebSocket.OPEN ) {
+      wsClient.send( data, { binary : true } );
     }
   } );
 }
 
-function packBeatPayload() {
-  console.log( "Packing beat" );
+function packPayload( arrays ) {
+  const length = sumBy( arrays, 'byteLength' );
+  const data = new Uint8Array( length );
 
-  return new Uint8Array( [MESSAGE_TYPE_BEAT] );
+  let i = 0;
+  for ( const array of arrays ) {
+    data.set( new Uint8Array( array.buffer ), i );
+    i += array.byteLength;
+  }
+
+  return data;
+}
+
+function packBeatPayload( position ) {
+  console.log( "Packing beat:", position );
+
+  return packPayload( [
+    new Uint8Array( [MESSAGE_TYPE_BEAT] ),
+    new Float64Array( [position] ),
+  ] );
 }
 
 function packSnippetPayload( id, time, flatness ) {
-  const info = new Uint32Array( [id, time] ).buffer;
-  const data = new Uint8Array( 1 + info.byteLength + flatness.length );
-  data[0] = MESSAGE_TYPE_SNIPPET;
-  data.set( new Uint8Array( info ), 1 );
-  data.set( new Uint8Array( flatness ), 1 + info.byteLength );
+  const data = packPayload( [
+    new Uint8Array( [MESSAGE_TYPE_SNIPPET] ),
+    new Uint32Array( [id, time] ),
+    new Uint8Array( flatness ),
+  ] );
 
   console.log( "Packing snippet:", id, time, flatness.length );
 

@@ -1,6 +1,7 @@
 import Snippet from './Snippet';
+import { lerpi } from './utils';
 
-type NewBeatCallback = () => void;
+type NewBeatCallback = ( snippet : Snippet ) => void;
 type NewSnippetCallback = ( snippet : Snippet, isUpdate : boolean ) => void;
 
 const MESSAGE_TYPE_SNIPPET = 0;
@@ -45,20 +46,23 @@ export default class SocketHandler {
     setTimeout( this.open.bind( this ), AUTO_TIMEOUT );
   }
 
-  private onMessageBeat() {
-    console.debug( 'SocketHandler - Received beat' );
+  private onMessageBeat( data : ArrayBuffer ) {
+    const info = new Float64Array( data );
+    const position = info[0];
+    const index = lerpi( position, 0.0, 1.0, 0, this.snippets.length );
+    const snippet = this.snippets[index];
 
-    this.onNewBeat?.();
+    console.debug( 'SocketHandler - Beat [Position=%f]', position );
+
+    this.onNewBeat?.( snippet );
   }
 
   private onMessageSnippet( data : ArrayBuffer ) {
-    const snippetInfo = new Uint32Array( data.slice( 0, 8 ) );
-    const snippetId = snippetInfo[0];
-    const snippetTime = snippetInfo[1];
-    const snippetFlatness = new Uint8Array( data.slice( 8 ) );
-    const snippet = new Snippet( snippetId, snippetTime, snippetFlatness );
+    const info = new Uint32Array( data.slice( 0, 8 ) );
+    const flatness = new Uint8Array( data.slice( 8 ) );
+    const snippet = new Snippet( info[0], info[1], flatness );
 
-    console.debug( 'SocketHandler - Received [ID=%d, Time=%d, Flatness=%d bytes]',
+    console.debug( 'SocketHandler - Snippet [ID=%d, Time=%d, Flatness=%d bytes]',
       snippet.id,
       snippet.time,
       snippet.flatness.length,
@@ -75,14 +79,15 @@ export default class SocketHandler {
 
   private async onMessage( event : MessageEvent<ArrayBuffer> ) {
     const messageType = new Uint8Array( event.data )[0];
+    const messageData = event.data.slice( 1 );
 
     switch ( messageType ) {
       case MESSAGE_TYPE_BEAT :
-      this.onMessageBeat();
+      this.onMessageBeat( messageData );
       break;
 
       case MESSAGE_TYPE_SNIPPET :
-      this.onMessageSnippet( event.data.slice( 1 ) );
+      this.onMessageSnippet( messageData );
       break;
     }
   }

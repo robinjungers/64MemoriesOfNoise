@@ -15,6 +15,10 @@ export function clamp( x : number, a : number, b : number ) : number {
     return Math.min( Math.max( x, min ), max );
 }
 
+export function randChoice( trueProb : number = 0.5 ) : boolean {
+    return Math.random() < trueProb;
+}
+
 export function shrinkArray( array : Float32Array, targetLength : number ) : Float32Array {
     if ( array.length < targetLength ) {
         throw 'Target length must be smaller that original length';
