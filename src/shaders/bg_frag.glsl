@@ -24,7 +24,7 @@ void main()
     mix( 0.74, 0.80, pow( d2 * n0, 0.3 + 0.18 * sin( 0.003 * time ) ) )
   );
 
-  c = mix( c, vec3( 0.2 ), n1 );
+  c = mix( c, vec3( 0.1 ), n1 );
 
   color = vec4( c, 1.0 );
 }

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import pointsVert from '../shaders/points_vert.glsl?raw';
 import pointsFrag from '../shaders/points_frag.glsl?raw';
 import { randFloat, randInt } from 'three/src/math/MathUtils';
-import { lerp, makeRandomChoiceGen, randChoice } from './utils';
+import { lerp, lerpi, makeRandomChoiceGen, randChoice } from './utils';
 import { times } from 'lodash';
 
 const LANE_COUNT = 100;
@@ -11,7 +11,7 @@ const POINT_COUNT = 1000;
 let randomLaneGen = makeRandomChoiceGen( times( LANE_COUNT, i => i ) )
 
 function makePoints( flatness : Uint8Array ) : THREE.Points {
-  const sign = randChoice() ? -1.0 : 1.0;
+  const sign = 1.0;//randChoice() ? -1.0 : 1.0;
   const lane = randomLaneGen();
   const positions = new Float32Array( POINT_COUNT * 3 );
   const values = new Float32Array( POINT_COUNT * 2 );
@@ -19,13 +19,13 @@ function makePoints( flatness : Uint8Array ) : THREE.Points {
   for ( let i = 0; i < POINT_COUNT; ++ i ) {
     const sampleIndex = randInt( 0, flatness.length - 1 );
     const samplePosition = lerp( sampleIndex, 0, flatness.length, 0.0, 1.0 );
-    const sampleValue = lerp( flatness[sampleIndex] + randFloat( -0.5, 0.5 ), 0, 255, 0.0, 1.0 );
+    const sampleValue = lerp( flatness[sampleIndex], 0, 255, 0.0, 1.0 );
     
-    const laneSpan = 0.8 * sampleValue
-    const ySpan = 0.95;
+    const laneSpan = 1.9 * sampleValue;
+    const ySpan = 0.99;
     const y = randFloat(
-      lerp( lane - laneSpan, 0, LANE_COUNT, -ySpan, ySpan ),
-      lerp( lane + laneSpan, 0, LANE_COUNT, -ySpan, ySpan ),
+      lerp( lane - laneSpan, 0, LANE_COUNT - 1, -ySpan, ySpan ),
+      lerp( lane + laneSpan, 0, LANE_COUNT - 1, -ySpan, ySpan ),
     );
 
     positions[i * 3 + 0] = sign;

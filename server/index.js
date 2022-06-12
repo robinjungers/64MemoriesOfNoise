@@ -7,7 +7,7 @@ const sqlite3 = require( 'sqlite3' );
 
 const MESSAGE_TYPE_SNIPPET = 0;
 const MESSAGE_TYPE_BEAT = 1;
-const BEAT_INTERVAL = 500;
+const BEAT_INTERVAL = 2000;
 
 function startBeat( wsServer ) {
   setInterval( () => {
