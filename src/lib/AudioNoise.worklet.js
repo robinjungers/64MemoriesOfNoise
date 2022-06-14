@@ -3,7 +3,7 @@ class AudioNoise extends AudioWorkletProcessor {
     super();
   }
   
-  process( _ : Float32Array[][], outputList : Float32Array[][] ) {
+  process( inputList, outputList ) {
     const output = outputList[0];
     
     for ( let i = 0; i < output.length; ++ i ) {
@@ -17,7 +17,5 @@ class AudioNoise extends AudioWorkletProcessor {
     return true;
   }
 };
-
-export {};
 
 registerProcessor( 'audio-noise', AudioNoise );

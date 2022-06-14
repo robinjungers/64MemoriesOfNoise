@@ -13,11 +13,7 @@ class AudioLimiter extends AudioWorkletProcessor {
     }];
   }
   
-  process(
-    inputList : Float32Array[][],
-    outputList : Float32Array[][],
-    parameters : Record<string, Float32Array>,
-  ) {
+  process( inputList, outputList, parameters ) {
     const input = inputList[0];
     const output = outputList[0];
     const channelCount = Math.min( input.length, output.length );
@@ -37,7 +33,5 @@ class AudioLimiter extends AudioWorkletProcessor {
     return true;
   }
 };
-
-export {};
 
 registerProcessor( 'audio-limiter', AudioLimiter );

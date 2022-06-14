@@ -64,12 +64,22 @@ function makePoints( flatness : Uint8Array ) : THREE.Points {
 export default class Snippet {
   public id : number;
   public time : number;
+  public latitude : number;
+  public longitude : number;
   public flatness : Uint8Array;
   public points : THREE.Points;
 
-  constructor( id : number, time : number, flatness : Uint8Array ) {
+  constructor(
+    id : number,
+    time : number,
+    latitude : number,
+    longitude : number,
+    flatness : Uint8Array,
+  ) {
     this.id = id;
     this.time = time;
+    this.latitude = latitude;
+    this.longitude = longitude;
     this.flatness = flatness;
     this.points = makePoints( flatness );
   }

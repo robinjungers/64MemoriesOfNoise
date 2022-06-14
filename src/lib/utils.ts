@@ -1,4 +1,4 @@
-import { min, max, mean, shuffle } from 'lodash';
+import { min, max, mean, shuffle, sumBy } from 'lodash';
 
 export function lerp( x : number, a : number, b : number, c : number, d : number ) : number {
     return c + ( d - c ) * ( x - a ) / ( b - a );
@@ -70,4 +70,17 @@ export function makeRandomChoiceGen<T>( items : T[] ) : () => T {
 
         return shuffledItems.pop()!;
     };
+}
+
+export function packUint8Array( arrays : ArrayBufferView[] ) : Uint8Array {
+  const length = sumBy( arrays, 'byteLength' );
+  const data = new Uint8Array( length );
+
+  let i = 0;
+  for ( const array of arrays ) {
+      data.set( new Uint8Array( array.buffer ), i );
+      i += array.byteLength;
+  }
+
+  return data;
 }

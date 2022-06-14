@@ -1,63 +1,72 @@
 import './common.css';
 import './ear.css';
-import AudioMixer from './lib/AudioMixer';
 import AudioAnalyzer from './lib/AudioAnalyzer';
 import Graph from './lib/Graph';
 import SocketHandler from './lib/SocketHandler';
 import { floatsToBytes } from './lib/utils';
+import AudioRecorder from './lib/AudioRecorder';
+import GeoLoc from './lib/GeoLoc';
 
 class App {
-  private socket : SocketHandler;
-  private analyzer : AudioAnalyzer;
-  private mixer : AudioMixer;
-  private graph1 : Graph;
-  private graph2 : Graph;
-  private isStarted : boolean = false;
+  private socket : SocketHandler = new SocketHandler();
+  private analyzer : AudioAnalyzer = new AudioAnalyzer();
+  private recorder : AudioRecorder = new AudioRecorder();
+  private graph : Graph;
   private isRecording : boolean = false;
+  private geoLoc : GeoLoc = new GeoLoc();
 
   constructor() {
-    this.socket = new SocketHandler();
-    this.analyzer = new AudioAnalyzer();
-    this.mixer = new AudioMixer();
+    this.graph = new Graph( document.querySelector( '#graph' ) as HTMLCanvasElement );
+    this.graph.resize( 300, 100, window.devicePixelRatio );
 
-    this.graph1 = new Graph( document.querySelector( '#canvas-1' ) as HTMLCanvasElement );
-    this.graph2 = new Graph( document.querySelector( '#canvas-2' ) as HTMLCanvasElement );
-    this.graph1.resize( 600, 100, window.devicePixelRatio );
-    this.graph2.resize( 600, 100, window.devicePixelRatio );
-  }
+    const appContainer = document.querySelector( '#app' ) as HTMLButtonElement;
+    const recordButton = document.querySelector( '#record' ) as HTMLButtonElement;
 
-  async start() {
-    await this.mixer.init();
+    Promise.all( [
+      this.recorder.request(),
+      this.geoLoc.waitForFirstLoc(),
+    ] ).then( () => {
+      appContainer.classList.add( 'ready' );
+    } );
     
-    this.isStarted = true;
+    recordButton.addEventListener( 'click', async () => {
+      if ( this.isRecording ) {
+        await this.stopRecording();
+        appContainer.classList.toggle( 'recording', false );
+      } else {
+        await this.startRecording();
+        appContainer.classList.toggle( 'recording', true );
+      }
+    } );
   }
 
   async startRecording() {
-    if ( !this.isStarted ) {
-      return;
-    }
+    await this.recorder.init();
 
-    this.mixer.recorder!.start();
+    this.recorder.start();
       
     this.isRecording = true;
   }
 
   async stopRecording() {
-    if ( !this.isStarted ) {
+    if ( !this.isRecording ) {
       return;
     }
 
-    const audioBuffer = await this.mixer.recorder!.stop();
+    const audioBuffer = await this.recorder.stop();
     const audioData = audioBuffer?.getChannelData( 0 );
     
     if ( audioData ) {
       const audioFlatness = await this.analyzer.computeFlatness( audioData );
       const audioFlatnessBytes = floatsToBytes( audioFlatness, 0.0, 1.0 );
 
-      this.socket.sendAudioFlatness( audioFlatnessBytes );
+      this.socket.sendRecording(
+        this.geoLoc.latitude,
+        this.geoLoc.longitude,
+        audioFlatnessBytes,
+      );
 
-      this.graph1.draw( audioData );
-      this.graph2.draw( audioFlatness );
+      this.graph.draw( audioFlatness );
     }
     
     this.isRecording = false;
@@ -71,13 +80,5 @@ class App {
 }
 
 window.addEventListener( 'DOMContentLoaded', () => {
-  const app = new App();
-  
-  ( document.querySelector( '#start' ) as HTMLButtonElement ).onclick = () => {
-    app.start()
-  };
-  
-  ( document.querySelector( '#record' ) as HTMLButtonElement ).onclick = () => {
-    app.toggleRecording();
-  };
+  new App();
 } );

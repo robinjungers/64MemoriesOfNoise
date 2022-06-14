@@ -1,4 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap');
+@font-face
+{
+  font-family: 'Major Mono Display';
+  font-style: normal;
+  font-weight: 400;
+  src: url(./fonts/MajorMonoDisplay-Regular.ttf);
+}
 
 #app
 {

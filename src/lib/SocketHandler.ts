@@ -1,8 +1,11 @@
 import EventEmitter from 'events';
+import { packUint8Array } from './utils';
 
 const MESSAGE_TYPE_SNIPPET = 0;
 const MESSAGE_TYPE_BEAT = 1;
 const AUTO_TIMEOUT = 1000;
+const ENDPOINT_PORT = process.env.NODE_ENV === 'production' ? 3000 : 3001;
+const ENDPOINT_URL = `ws://${window.location.hostname}:${ENDPOINT_PORT}/`;
 
 export default class SocketHandler extends EventEmitter {
   private ws : WebSocket | null = null;
@@ -14,7 +17,7 @@ export default class SocketHandler extends EventEmitter {
   }
 
   private open() {
-    this.ws = new WebSocket( 'ws://localhost:3001' );
+    this.ws = new WebSocket( ENDPOINT_URL );
     this.ws.binaryType = 'arraybuffer';
     this.ws.addEventListener( 'open', this.onOpen.bind( this ) );
     this.ws.addEventListener( 'close', this.onClose.bind( this ) );
@@ -42,17 +45,18 @@ export default class SocketHandler extends EventEmitter {
 
   private onMessageSnippet( data : ArrayBuffer ) {
     const info = new Uint32Array( data.slice( 0, 8 ) );
-    const id = info[0];
-    const time = info[1];
-    const flatness = new Uint8Array( data.slice( 8 ) );
+    const location = new Float64Array( data.slice( 8, 24 ) );
+    const flatness = new Uint8Array( data.slice( 24 ) );
 
-    console.debug( 'SocketHandler - Snippet [ID=%d, Time=%d, Flatness=%d bytes]',
-      id,
-      time,
+    console.debug( 'SocketHandler - Snippet [ID=%d, Time=%d, Latitude=%f, Longitude=%f, Flatness=%d bytes]',
+      info[0],
+      info[1],
+      location[0],
+      location[1],
       flatness.length,
     );
 
-    this.emit( 'new', id, time, flatness );
+    this.emit( 'new', info[0], info[1], location[0], location[1], flatness );
   }
 
   private async onMessage( event : MessageEvent<ArrayBuffer> ) {
@@ -70,11 +74,17 @@ export default class SocketHandler extends EventEmitter {
     }
   }
 
-  sendAudioFlatness( audioFlatness : Uint8Array ) {
-    if ( this.ws ) {
-      this.ws.send( audioFlatness );
-    } else {
+  sendRecording( latitude : number, longitude : number, flatness : Uint8Array ) {
+    if ( !this.ws ) {
       console.warn( 'SocketHandler - WS not open' );
+      return;
     }
+
+    const data = packUint8Array( [
+      new Float64Array( [latitude, longitude] ),
+      flatness,
+    ] );
+
+    this.ws.send( data );
   }
 }

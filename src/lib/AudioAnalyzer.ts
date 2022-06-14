@@ -1,11 +1,14 @@
 import { Remote, wrap } from 'comlink';
-import { Analyzer } from "./AudioAnalyzer.worker";
+
+type Analyzer = {
+  computeFlatness : ( audioData : Float32Array ) => Float32Array;
+}
 
 export default class AudioAnalyzer {
   private wrapper : Remote<Analyzer>;
 
   constructor() {
-    const worker = new Worker( new URL( './AudioAnalyzer.worker.ts', import.meta.url ), {
+    const worker = new Worker( new URL( './AudioAnalyzer.worker.js', import.meta.url ), {
       type : 'module',
     } );
 

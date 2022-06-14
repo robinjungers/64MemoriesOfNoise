@@ -36,8 +36,8 @@ class App {
     }
   }
 
-  private onSocketNew( id : number, time : number, flatness : Uint8Array ) {
-    const snippet = new Snippet( id, time, flatness );
+  private onSocketNew( id : number, time : number, latitude : number, longitude : number, flatness : Uint8Array ) {
+    const snippet = new Snippet( id, time, latitude, longitude, flatness );
 
     this.snippets.addSnippet( snippet );
   }

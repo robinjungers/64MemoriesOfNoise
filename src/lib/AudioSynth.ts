@@ -22,8 +22,8 @@ export default class AudioSynth {
 
   private async buildGraphAndStart() {
     await Promise.all( [
-      this.ctx.audioWorklet.addModule( new URL( './AudioLimiter.worklet.ts', import.meta.url ) ),
-      this.ctx.audioWorklet.addModule( new URL( './AudioNoise.worklet.ts', import.meta.url ) ),
+      this.ctx.audioWorklet.addModule( new URL( './AudioLimiter.worklet.js', import.meta.url ) ),
+      this.ctx.audioWorklet.addModule( new URL( './AudioNoise.worklet.js', import.meta.url ) ),
     ] );
 
     this.master = this.ctx.createGain();

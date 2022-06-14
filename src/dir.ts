@@ -25,6 +25,20 @@ function formatTime( time : Date ) : string {
   return `${d} ${t}`;
 }
 
+function formatLocationComponent( value : number ) : string {
+  const sign = value < 0 ? '-' : '+';
+  const abs = Math.abs( value ).toFixed( 7 ).padStart( 11, '0' );
+
+  return `${sign}${abs}`;
+}
+
+function formatLocation( latitude : number, longitude : number ) : string {
+  return [
+    formatLocationComponent( latitude ),
+    formatLocationComponent( longitude ),
+  ].join( ',' );
+}
+
 function formatSize( size : number ) : string {
   const s = size.toString().padStart( 4, '0' );
 
@@ -58,8 +72,8 @@ class App {
     }
   }
 
-  private onSocketNew( id : number, time : number, flatness : Uint8Array ) {
-    const snippet = new Snippet( id, time, flatness );
+  private onSocketNew( id : number, time : number, latitude : number, longitude : number, flatness : Uint8Array ) {
+    const snippet = new Snippet( id, time, latitude, longitude, flatness );
 
     this.snippets.addSnippet( snippet );
   }
@@ -72,6 +86,10 @@ class App {
       timeElement.classList.add( 'detail', 'detail-time' );
       timeElement.innerText = formatTime( snippet.displayTime );
 
+      const locationElement = document.createElement( 'span' );
+      locationElement.classList.add( 'detail', 'detail-location' );
+      locationElement.innerText = formatLocation( snippet.latitude, snippet.longitude );
+
       const sizeElement = document.createElement( 'span' );
       sizeElement.classList.add( 'detail', 'detail-size' );
       sizeElement.innerText = formatSize( snippet.flatness.length );
@@ -80,6 +98,7 @@ class App {
       itemElement.id = `snippet-${snippet.id}`;
       itemElement.classList.add( 'details' );
       itemElement.appendChild( timeElement );
+      itemElement.appendChild( locationElement );
       itemElement.appendChild( sizeElement );
 
       this.container.append( itemElement )

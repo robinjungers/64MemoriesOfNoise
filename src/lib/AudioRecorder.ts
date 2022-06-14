@@ -1,27 +1,40 @@
 export default class AudioRecorder {
-    public ctx : AudioContext;
-    public input : MediaStreamAudioDestinationNode;
-    public chunks : Blob[];
-    public recorder : MediaRecorder;
+    public ctx : AudioContext = new AudioContext();
+    public chunks : Blob[] = [];
+    public stream? : MediaStream;
+    public recorder? : MediaRecorder;
 
-    constructor( ctx : AudioContext ) {
-        this.ctx = ctx;
+    constructor() {
+    }
 
-        this.input = this.ctx.createMediaStreamDestination();
+    async request() {
+        this.stream = await navigator.mediaDevices.getUserMedia ( { audio : true, video : false } );
 
-        this.chunks = [];
-
-        this.recorder = new MediaRecorder( this.input.stream );
+        this.recorder = new MediaRecorder( this.stream );
         this.recorder.addEventListener( 'dataavailable', event => {
             this.chunks.push( event.data );
         } );
     }
 
+    async init() {
+        if ( this.ctx.state === 'suspended' ) {
+            await this.ctx.resume();
+        }
+    }
+
     start() {
+        if ( !this.recorder ) {
+            throw 'Recorder not initalized';
+        }
+
         this.recorder.start();
     }
 
     stop() : Promise<AudioBuffer | null> {
+        if ( !this.recorder ) {
+            throw 'Recorder not initalized';
+        }
+
         return new Promise( ( resolve ) => {
             const onStop = async () => {
                 const blob = new Blob( this.chunks, { 'type' : 'audio/ogg; codecs=opus' } );
@@ -38,8 +51,8 @@ export default class AudioRecorder {
                 this.chunks = [];
             };
 
-            this.recorder.addEventListener( 'stop', onStop, { once : true } );
-            this.recorder.stop();
+            this.recorder!.addEventListener( 'stop', onStop, { once : true } );
+            this.recorder!.stop();
         } );
     }
 }
