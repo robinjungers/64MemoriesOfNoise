@@ -1,6 +1,8 @@
 import './common.css';
 import './dir.css';
+import { shiverDuration } from './lib/AnimShiver';
 import Snippet from './lib/Snippet';
+import SnippetList from './lib/SnippetList';
 import SocketHandler from './lib/SocketHandler';
 
 function formatTimeNumber( num : number ) : string {
@@ -29,43 +31,59 @@ function formatSize( size : number ) : string {
   return `${s}b`;
 }
 
-function formatData( data : Uint8Array ) : string {
-  return Array.from( data, ( value : number ) => {
-    return value.toString( 16 ).padStart( 2, '0' );
-  } ).join( '' );
-}
-
 class App {
   private container : HTMLOListElement;
-  private socket : SocketHandler;
+  private socketHandler : SocketHandler = new SocketHandler();
+  private snippets : SnippetList = new SnippetList( 64 );
 
   constructor() {
     this.container = document.querySelector( '#records' ) as HTMLOListElement;
-    this.socket = new SocketHandler(
-      this.onNewBeat.bind( this ),
-      this.onNewSnippet.bind( this ),
-    );
+    
+    this.socketHandler.on( 'beat', this.onSocketBeat.bind( this ) );
+    this.socketHandler.on( 'new', this.onSocketNew.bind( this ) );
+
+    this.snippets.on( 'changed', this.onChanged.bind( this ) );
   }
 
-  private onNewBeat() {
+  private onSocketBeat( id : number ) {
+    const sel = `#snippet-${id}`;
+    const element = document.querySelector( sel );
 
+    if ( element ) {
+      element.classList.toggle( 'active', true );
+
+      setTimeout( () => {
+        element.classList.toggle( 'active', false );
+      }, shiverDuration );
+    }
   }
 
-  private onNewSnippet( snippet : Snippet ) {
-    const timeElement = document.createElement( 'span' );
-    timeElement.classList.add( 'detail', 'detail-time' );
-    timeElement.innerText = formatTime( snippet.displayTime );
+  private onSocketNew( id : number, time : number, flatness : Uint8Array ) {
+    const snippet = new Snippet( id, time, flatness );
 
-    const sizeElement = document.createElement( 'span' );
-    sizeElement.classList.add( 'detail', 'detail-size' );
-    sizeElement.innerText = formatSize( snippet.flatness.length );
+    this.snippets.addSnippet( snippet );
+  }
 
-    const itemElement = document.createElement( 'li' );
-    itemElement.classList.add( 'details' );
-    itemElement.appendChild( timeElement );
-    itemElement.appendChild( sizeElement );
+  private onChanged( orderedSnippets : Snippet[] ) {
+    this.container.innerHTML = '';
 
-    this.container.append( itemElement )
+    orderedSnippets.forEach( ( snippet : Snippet ) => {
+      const timeElement = document.createElement( 'span' );
+      timeElement.classList.add( 'detail', 'detail-time' );
+      timeElement.innerText = formatTime( snippet.displayTime );
+
+      const sizeElement = document.createElement( 'span' );
+      sizeElement.classList.add( 'detail', 'detail-size' );
+      sizeElement.innerText = formatSize( snippet.flatness.length );
+
+      const itemElement = document.createElement( 'li' );
+      itemElement.id = `snippet-${snippet.id}`;
+      itemElement.classList.add( 'details' );
+      itemElement.appendChild( timeElement );
+      itemElement.appendChild( sizeElement );
+
+      this.container.append( itemElement )
+    } );
   }
 }
 

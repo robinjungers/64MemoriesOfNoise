@@ -4,18 +4,22 @@ import AudioSynth from './AudioSynth';
 import Snippet from './Snippet';
 import { lerpi } from './utils';
 
-const SHIVER_DURATION = 5e3;
+export const shiverDuration = 5e3;
 
 export default class AnimShiver {
   private tween : TWEEN.Tween<AnimShiver>;
   private snippet : Snippet;
   private position : number = 0.0;
 
-  constructor( snippet : Snippet, onComplete : () => void ) {
+  constructor(
+    audioSynth : AudioSynth,
+    snippet : Snippet,
+    onComplete : () => void
+  ) {
     this.snippet = snippet;
     
     this.tween = new TWEEN.Tween<AnimShiver>( this );
-    this.tween.to( { position : 1.0 }, SHIVER_DURATION );
+    this.tween.to( { position : 1.0 }, shiverDuration );
     this.tween.easing( TWEEN.Easing.Linear.None );
     this.tween.onComplete( () => onComplete() );
     this.tween.onUpdate( () => {
@@ -23,11 +27,11 @@ export default class AnimShiver {
       const flatnessValue = this.snippet.flatness[flatnessIndex];
 
       if ( inRange( flatnessValue, 0, 20 ) ) {
-        AudioSynth().triggerClick();
+        audioSynth.triggerClick();
       }
       
       if ( inRange( flatnessValue, 20, 40 ) ) {
-        AudioSynth().triggerWob();
+        audioSynth.triggerWob();
       }
 
       this.snippet.shaderShiverProgress = this.position;

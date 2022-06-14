@@ -1,5 +1,6 @@
 import * as TWEEN from '@tweenjs/tween.js';
 import AnimShiver from './AnimShiver';
+import AudioSynth from './AudioSynth';
 import Snippet from './Snippet';
 
 type UpdateCallback = ( time : number ) => void;
@@ -14,8 +15,8 @@ export default class AnimClock {
     window.requestAnimationFrame( this.update.bind( this ) );
   }
 
-  triggerShiver( snippet : Snippet ) {
-    const shiver = new AnimShiver( snippet, () => {
+  triggerShiver( audioSynth : AudioSynth, snippet : Snippet ) {
+    const shiver = new AnimShiver( audioSynth, snippet, () => {
       this.shivers.delete( shiver );
     } );
     

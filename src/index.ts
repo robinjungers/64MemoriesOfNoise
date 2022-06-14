@@ -4,39 +4,46 @@ import AnimClock from './lib/AnimClock';
 import AudioSynth from './lib/AudioSynth';
 import Canvas from './lib/Canvas';
 import Snippet from './lib/Snippet';
+import SnippetList from './lib/SnippetList';
 import SocketHandler from './lib/SocketHandler';
 
 class App {
   private animClock : AnimClock;
   private canvas : Canvas;
-  private socket : SocketHandler;
+  private audioSynth : AudioSynth;
+  private socketHandler : SocketHandler;
+  private snippets : SnippetList = new SnippetList( 64 );
 
   constructor() {
-    this.animClock = new AnimClock( this.onUpdate.bind( this ) );
+    this.animClock = new AnimClock( this.onClockUpdate.bind( this ) );
+
+    this.audioSynth = new AudioSynth();
+    this.audioSynth.initOnClick();
     
-    window.addEventListener( 'click', () => {
-      AudioSynth().init();
-    } );
-    
-    this.socket = new SocketHandler(
-      this.onNewBeat.bind( this ),
-      this.onNewSnippet.bind( this ),
-    );
+    this.socketHandler = new SocketHandler();
+    this.socketHandler.on( 'beat', this.onSocketBeat.bind( this ) );
+    this.socketHandler.on( 'new', this.onSocketNew.bind( this ) );
 
     const canvasContainer = document.querySelector( '#app' ) as HTMLDivElement;
-    this.canvas = new Canvas( this.socket.snippets, canvasContainer );
+    this.canvas = new Canvas( this.snippets, canvasContainer );
   }
 
-  private onUpdate( time : number ) {
+  private onSocketBeat( id : number ) {
+    const snippet = this.snippets.getSnippetById( id );
+
+    if ( snippet ) {
+      this.animClock.triggerShiver( this.audioSynth, snippet );
+    }
+  }
+
+  private onSocketNew( id : number, time : number, flatness : Uint8Array ) {
+    const snippet = new Snippet( id, time, flatness );
+
+    this.snippets.addSnippet( snippet );
+  }
+
+  private onClockUpdate( time : number ) {
     this.canvas.draw( time );
-  }
-
-  private onNewBeat( snippet : Snippet ) {
-    this.animClock.triggerShiver( snippet );
-  }
-
-  private onNewSnippet( snippet : Snippet ) {
-    this.canvas.addSnippet( snippet );
   }
 }
 

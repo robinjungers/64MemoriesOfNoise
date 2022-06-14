@@ -2,10 +2,10 @@ import * as THREE from 'three';
 import pointsVert from '../shaders/points_vert.glsl?raw';
 import pointsFrag from '../shaders/points_frag.glsl?raw';
 import { randFloat, randInt } from 'three/src/math/MathUtils';
-import { lerp, lerpi, makeRandomChoiceGen, randChoice } from './utils';
+import { lerp, makeRandomChoiceGen } from './utils';
 import { times } from 'lodash';
 
-const LANE_COUNT = 100;
+const LANE_COUNT = 64;
 const POINT_COUNT = 1000;
 
 let randomLaneGen = makeRandomChoiceGen( times( LANE_COUNT, i => i ) )
@@ -48,6 +48,7 @@ function makePoints( flatness : Uint8Array ) : THREE.Points {
       showHighlight : { value : false },
       scale : { value : 1.0 },
       time : { value : 0.0 },
+      frame : { value : 0 },
     },
     transparent : true,
     depthTest : false,
@@ -81,6 +82,10 @@ export default class Snippet {
     ( this.points.material as any ).uniforms.scale.value = scale;
   }
 
+  set shaderFrame( frame : number ) {
+    ( this.points.material as any ).uniforms.frame.value = frame;
+  }
+
   set shaderTime( time : number ) {
     ( this.points.material as any ).uniforms.time.value = time;
   }
@@ -91,5 +96,11 @@ export default class Snippet {
 
   get displayTime() : Date {
     return new Date( this.time * 1000 );
+  }
+
+  disposeAndRemoveFromParent() {
+    ( this.points.material as THREE.Material ).dispose();
+    ( this.points.geometry as THREE.BufferGeometry ).dispose();
+    this.points.removeFromParent();
   }
 }

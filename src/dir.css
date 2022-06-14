@@ -10,7 +10,7 @@
   overflow: hidden;
   font-family: 'Major Mono Display', monospace;
   font-weight: 400;
-  font-size: 0.9vh;
+  font-size: 0.8vh;
   text-transform: lowercase;
   background-color: hsl(0, 0%, 12%);
   letter-spacing: 0.08em;
@@ -37,6 +37,13 @@
   height: 0.4em;
   background-color: hsl(0, 0%, 20%);
   border-radius: 50%;
+  transition-property: background-color;
+  transition-timing-function: ease;
+  transition-duration: 0.1s;
+}
+.details.active::before
+{
+  background-color: hsl(0, 0%, 90%);
 }
 .details > * + *::before
 {

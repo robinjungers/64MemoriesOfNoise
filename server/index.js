@@ -8,13 +8,34 @@ const sqlite3 = require( 'sqlite3' );
 const MESSAGE_TYPE_SNIPPET = 0;
 const MESSAGE_TYPE_BEAT = 1;
 const BEAT_INTERVAL = 2000;
+const MAX_SNIPPETS = 64;
 
-function startBeat( wsServer ) {
+function startBeat( db, wsServer ) {
   setInterval( () => {
-    const position = Math.random();
-    const data = packBeatPayload( position );
+    db.serialize( () => {
+      db.get( `
+        SELECT
+          snippet_id
+        FROM (
+          SELECT
+            snippet_id,
+            snippet_time
+          FROM snippets
+          ORDER BY snippet_time DESC
+          LIMIT ?
+        )
+        ORDER BY RANDOM()
+        LIMIT 1;
+      `, MAX_SNIPPETS, ( error, row ) => {
+        if ( error ) {
+          throw error;
+        }
 
-    broadcastData( wsServer, data );
+        const data = packBeatPayload( row['snippet_id'] );
+
+        broadcastData( wsServer, data );
+      } );
+    } );
   }, BEAT_INTERVAL );
 }
 
@@ -39,12 +60,12 @@ function packPayload( arrays ) {
   return data;
 }
 
-function packBeatPayload( position ) {
-  console.log( "Packing beat:", position );
+function packBeatPayload( id ) {
+  console.log( "Packing beat:", id );
 
   return packPayload( [
     new Uint8Array( [MESSAGE_TYPE_BEAT] ),
-    new Float64Array( [position] ),
+    new Uint32Array( [id] ),
   ] );
 }
 
@@ -90,9 +111,9 @@ function packSnippetPayload( id, time, flatness ) {
           snippet_time,
           snippet_flatness
         FROM snippets
-        ORDER BY snippet_id DESC
-        LIMIT 1000;
-      `, ( error, row ) => {
+        ORDER BY snippet_time DESC
+        LIMIT ?;
+      `, MAX_SNIPPETS, ( error, row ) => {
         if ( error ) {
           throw error;
         }
@@ -134,5 +155,5 @@ function packSnippetPayload( id, time, flatness ) {
     } );
   } );
 
-  startBeat( wsServer );
+  startBeat( db, wsServer );
 } )();

@@ -1,29 +1,14 @@
-import Snippet from './Snippet';
-import { lerpi } from './utils';
-
-type NewBeatCallback = ( snippet : Snippet ) => void;
-type NewSnippetCallback = ( snippet : Snippet, isUpdate : boolean ) => void;
+import EventEmitter from 'events';
 
 const MESSAGE_TYPE_SNIPPET = 0;
 const MESSAGE_TYPE_BEAT = 1;
 const AUTO_TIMEOUT = 1000;
 
-export default class SocketHandler {
-  private ws : WebSocket | null;
-  private onNewBeat? : NewBeatCallback;
-  private onNewSnippet? : NewSnippetCallback;
-  public snippets : Snippet[];
-  public snippetMinTime : number = 0.0;
-  public snippetMaxTime : number = 1.0;
+export default class SocketHandler extends EventEmitter {
+  private ws : WebSocket | null = null;
 
-  constructor(
-    onNewBeat? : NewBeatCallback,
-    onNewSnippet? : NewSnippetCallback,
-  ) {
-    this.ws = null;
-    this.onNewBeat = onNewBeat;
-    this.onNewSnippet = onNewSnippet;
-    this.snippets = [];
+  constructor() {
+    super();
 
     this.open();
   }
@@ -47,34 +32,27 @@ export default class SocketHandler {
   }
 
   private onMessageBeat( data : ArrayBuffer ) {
-    const info = new Float64Array( data );
-    const position = info[0];
-    const index = lerpi( position, 0.0, 1.0, 0, this.snippets.length );
-    const snippet = this.snippets[index];
+    const info = new Uint32Array( data );
+    const id = info[0];
 
-    console.debug( 'SocketHandler - Beat [Position=%f]', position );
+    console.debug( 'SocketHandler - Beat [ID=%f]', id );
 
-    this.onNewBeat?.( snippet );
+    this.emit( 'beat', id );
   }
 
   private onMessageSnippet( data : ArrayBuffer ) {
     const info = new Uint32Array( data.slice( 0, 8 ) );
+    const id = info[0];
+    const time = info[1];
     const flatness = new Uint8Array( data.slice( 8 ) );
-    const snippet = new Snippet( info[0], info[1], flatness );
 
     console.debug( 'SocketHandler - Snippet [ID=%d, Time=%d, Flatness=%d bytes]',
-      snippet.id,
-      snippet.time,
-      snippet.flatness.length,
+      id,
+      time,
+      flatness.length,
     );
 
-    const existed = !!this.snippets.find( other => other.id === snippet.id );
-
-    this.snippets.push( snippet );
-    this.snippetMinTime = Math.min( this.snippetMinTime, snippet.time );
-    this.snippetMaxTime = Math.max( this.snippetMaxTime, snippet.time );
-
-    this.onNewSnippet?.( snippet, existed );
+    this.emit( 'new', id, time, flatness );
   }
 
   private async onMessage( event : MessageEvent<ArrayBuffer> ) {

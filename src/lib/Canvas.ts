@@ -7,6 +7,7 @@ import quadVert from '../shaders/quad_vert.glsl?raw';
 import bgFrag from '../shaders/bg_frag.glsl?raw';
 import blurFrag from '../shaders/blur_frag.glsl?raw';
 import composeFrag from '../shaders/compose_frag.glsl?raw';
+import SnippetList from './SnippetList';
 
 function setupBackground() : THREE.Mesh {
   const texture = new THREE.TextureLoader().load( noiseTexURL );
@@ -64,10 +65,13 @@ export default class Canvas {
   private finalQuad : THREE.Mesh;
   private simplex : SimplexNoise;
   private pixelSize : THREE.Vector2;
-  private snippets : Snippet[];
+  private snippets : SnippetList;
+  private frame : number = 0;
 
-  constructor( snippets : Snippet[], container : HTMLDivElement ) {
+  constructor( snippets : SnippetList, container : HTMLDivElement ) {
     this.snippets = snippets;
+    this.snippets.on( 'added', this.onSnippetAdded.bind( this ) );
+    this.snippets.on( 'removed', this.onSnippetRemoved.bind( this ) );
 
     const w = window.innerWidth;
     const h = window.innerHeight;
@@ -106,6 +110,14 @@ export default class Canvas {
     window.addEventListener( 'resize', debounce( this.resize.bind( this ), 500 ) );
   }
 
+  private onSnippetAdded( snippet : Snippet ) {
+    this.fullScene.add( snippet.points );
+  }
+
+  private onSnippetRemoved( snippet : Snippet ) {
+    snippet.disposeAndRemoveFromParent();
+  }
+
   private resize() {
     const w = window.innerWidth;
     const h = window.innerHeight;
@@ -126,6 +138,7 @@ export default class Canvas {
 
     this.snippets.forEach( ( snippet : Snippet ) => {
       snippet.shaderTime = time;
+      snippet.shaderFrame = this.frame;
       snippet.shaderScale = 1e-3 * this.pixelSize.y;
       snippet.shaderShowHighlight = false;
     } );
@@ -154,9 +167,7 @@ export default class Canvas {
     finalUniforms.tex0.value = this.fullTarget.texture;
     finalUniforms.tex1.value = this.blurTarget.texture;
     this.renderer.render( this.finalQuad, this.camera );
-  }
 
-  addSnippet( snippet : Snippet ) {
-    this.fullScene.add( snippet.points );
+    ++ this.frame;
   }
 }

@@ -2,6 +2,8 @@
 precision mediump float;
 
 uniform float shiverProgress;
+uniform float time;
+uniform int frame;
 uniform bool showHighlight;
 
 in float vPosition;
@@ -44,8 +46,9 @@ void main()
     vec4 c1 = vec4( 0.5, 0.2, 0.1, a );
     float f = activate( vPosition, shiverProgress ) * envelop( shiverProgress );
     float ff = ( 0.5 + 2.0 * vLevel * vLevel );
+    float fff = vLevel > 0.7 ? sin( time ) : 1.0;
   
-    color = mix( c0, c1, f ) * ff;
+    color = mix( c0, c1, f ) * ff * fff;
   } else {
     color = vec4( l, l, l, a );
   }

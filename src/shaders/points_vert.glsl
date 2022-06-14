@@ -24,14 +24,13 @@ void main()
   vPosition = value.x;
   vLevel = inv * inv;
 
-  float t = 1.2 + 0.3 * cos( 0.0001 * time );
-  float x = position.x * exp( 8.0 * t * ( inv - 1.05 ) );
+  float x = position.x * exp( 8.0 * ( inv - 1.05 ) ) - 0.2;
   float y = position.y;
 
   vUv = vec2( x, y );
 
-  float r0 = showHighlight ? 3.0 : 8.0;
-  float r1 = showHighlight ? 1.5 : 0.5;
+  float r0 = showHighlight ? 5.0 : 8.0;
+  float r1 = showHighlight ? 2.0 : 1.0;
 
   gl_PointSize = mix( r0, r1, vLevel ) * scale;
   gl_Position = projectionMatrix * modelViewMatrix * vec4( x, y, 0.0, 1.0 );

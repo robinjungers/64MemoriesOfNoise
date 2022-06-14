@@ -16,7 +16,7 @@ void main()
   float d2 = 2.1 * length( vUv - 0.5 + 0.16 * focusCenter );
   
   float n0 = 1.9 * texture( noiseTex, 0.5 * vUv ).r;
-  float n1 = 1.0 * texture( noiseTex, 1.0 * vUv ).r;
+  float n1 = 1.0 * texture( noiseTex, 0.8 * vUv ).r;
 
   vec3 c = vec3(
     mix( 0.74, 0.86, pow( d0 * n0, 2.1 + 0.14 * sin( 0.002 * time ) ) ),
