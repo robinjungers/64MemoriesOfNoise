@@ -1,9 +1,26 @@
+const fs = require( 'fs' );
 const path = require( 'path' );
 const express = require( 'express' );
 const { packUint8Array } = require( './utils' );
 const { WebSocket, WebSocketServer } = require( 'ws' );
-const app = express();
 const sqlite3 = require( 'sqlite3' );
+
+const NODE_PORT = parseInt( process.env.NODE_PORT );
+const NEEDS_SSL = ( NODE_PORT === 443 );
+
+function makeServer( app ) {
+  if ( NEEDS_SSL ) {
+    const { createServer } = require( 'https' );
+    const key = fs.readFileSync( path.join( __dirname, 'key.pem' ) );
+    const cert = fs.readFileSync( path.join( __dirname, 'cert.pem' ) );
+
+    return createServer( { key, cert }, app );
+  }
+
+  const { createServer } = require( 'http' );
+
+  return createServer( app );
+}
 
 const MESSAGE_TYPE_SNIPPET = 0;
 const MESSAGE_TYPE_BEAT = 1;
@@ -72,6 +89,8 @@ function packSnippetPayload( id, time, latitude, longitude, flatness ) {
 }
 
 ( async () => {
+  const app = express();
+
   const dbPath = path.join( __dirname, './data.db' );
   const db = new sqlite3.Database( dbPath );
 
@@ -89,9 +108,10 @@ function packSnippetPayload( id, time, latitude, longitude, flatness ) {
   const staticMid = express.static( staticDir );
   app.use( staticMid );
 
-  const serverPort = parseInt( process.env.NODE_PORT );
-  const server = app.listen( serverPort, () => {
-    console.log( 'Listening on %d', serverPort );
+  const server = makeServer( app );
+  
+  server.listen( NODE_PORT, () => {
+    console.log( 'Listening on %d', NODE_PORT );
   } );
 
   const wsServer = new WebSocketServer( { server } );

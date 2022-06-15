@@ -10,7 +10,11 @@
     "prod-ssl-build": " tsc && NODE_ENV=production NODE_PORT=443 vite build",
     "prod-ssl-start": "NODE_ENV=production NODE_PORT=443 node server/index.js",
     "local-build": " tsc && NODE_ENV=production NODE_PORT=3000 vite build",
-    "local-start": "NODE_ENV=production NODE_PORT=3000 node server/index.js"
+    "local-start": "NODE_ENV=production NODE_PORT=3000 node server/index.js",
+    "ssl-request": "sudo certbot certonly -d 64m.robinjungers.com",
+    "ssl-link-cert": "ls -s /etc/letsencrypt/live/64m.robinjungers.com/fullchain.pem ./server/cert.pem",
+    "ssl-link-key": "ls -s /etc/letsencrypt/live/64m.robinjungers.com/privkey.pem ./server/key.pem",
+    "ssl-link": "npm run ssl-link-cert && npm run ssl-link-key"
   },
   "devDependencies": {
     "@tweenjs/tween.js": "^18.6.4",

@@ -23,5 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
+# Custom
 py/audio
 server/data.db
+server/key.pem
+server/cert.pem
