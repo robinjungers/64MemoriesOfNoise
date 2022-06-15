@@ -1,0 +1,13 @@
+[Unit]
+Description=App
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+KillSignal=SIGQUIT
+WorkingDirectory=/root/app
+ExecStart=make run-prod-ssl-server
+
+[Install]
+WantedBy=multi-user.target

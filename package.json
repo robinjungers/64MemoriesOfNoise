@@ -3,18 +3,6 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "NODE_ENV=development NODE_PORT=3001 vite",
-    "start": "NODE_ENV=development NODE_PORT=3001 node server/index.js",
-    "prod-build": " tsc && NODE_ENV=production NODE_PORT=80 vite build",
-    "prod-start": "NODE_ENV=production NODE_PORT=80 node server/index.js",
-    "prod-ssl-build": " tsc && NODE_ENV=production NODE_PORT=443 vite build",
-    "prod-ssl-start": "NODE_ENV=production NODE_PORT=443 node server/index.js",
-    "local-build": " tsc && NODE_ENV=production NODE_PORT=3000 vite build",
-    "local-start": "NODE_ENV=production NODE_PORT=3000 node server/index.js",
-    "ssl-request": "sudo certbot certonly -d 64m.robinjungers.com",
-    "ssl-link-cert": "ln -s /etc/letsencrypt/live/64m.robinjungers.com/fullchain.pem ./server/cert.pem",
-    "ssl-link-key": "ln -s /etc/letsencrypt/live/64m.robinjungers.com/privkey.pem ./server/key.pem",
-    "ssl-link": "npm run ssl-link-cert && npm run ssl-link-key"
   },
   "devDependencies": {
     "@tweenjs/tween.js": "^18.6.4",
@@ -27,7 +15,6 @@
     "comlink": "^4.3.1",
     "essentia.js": "^0.1.3",
     "events": "^3.3.0",
-    "lodash": "^4.17.21",
     "simplex-noise": "^3.0.1",
     "three": "^0.141.0",
     "typescript": "^4.5.4",
@@ -35,6 +22,7 @@
   },
   "dependencies": {
     "express": "^4.18.1",
+    "lodash": "^4.17.21",
     "sqlite3": "^5.0.8",
     "ws": "^8.7.0"
   }
