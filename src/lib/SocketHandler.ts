@@ -4,9 +4,8 @@ import { packUint8Array } from './utils';
 const MESSAGE_TYPE_SNIPPET = 0;
 const MESSAGE_TYPE_BEAT = 1;
 const AUTO_TIMEOUT = 1000;
-const ENDPOINT_PORT = process.env.NODE_ENV === 'production' ? 3000 : 3001;
 const ENDPOINT_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const ENDPOINT_URL = `${ENDPOINT_PROTOCOL}//${window.location.hostname}:${ENDPOINT_PORT}/`;
+const ENDPOINT_URL = `${ENDPOINT_PROTOCOL}//${window.location.hostname}:${__NODE_PORT}`;
 
 export default class SocketHandler extends EventEmitter {
   private ws : WebSocket | null = null;

@@ -89,7 +89,7 @@ function packSnippetPayload( id, time, latitude, longitude, flatness ) {
   const staticMid = express.static( staticDir );
   app.use( staticMid );
 
-  const serverPort = process.env.NODE_ENV === 'production' ? 3000 : 3001;
+  const serverPort = parseInt( process.env.NODE_PORT );
   const server = app.listen( serverPort, () => {
     console.log( 'Listening on %d', serverPort );
   } );
