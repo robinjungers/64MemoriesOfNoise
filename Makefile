@@ -1,4 +1,6 @@
 DOMAIN := 64m.robinjungers.com
+DIR_CURRENT := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+DIR_SYSTEMD := /etc/systemd/system
 
 run-dev :
 	NODE_ENV=development NODE_PORT=3001 npx vite
@@ -28,7 +30,7 @@ run-local-server :
 	NODE_ENV=production NODE_PORT=3000 node server/index.js
 
 systemd-install :
-	sudo ln -fs ./systemd/app.service /etc/systemd/system
+	sudo ln -fs $(DIR_CURRENT)/systemd/app.service $(DIR_SYSTEMD)
 	sudo systemctl enable app
 	sudo systemctl start app
 
