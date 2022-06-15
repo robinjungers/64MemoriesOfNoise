@@ -44,11 +44,11 @@ function makePoints( flatness : Uint8Array ) : THREE.Points {
     vertexShader : pointsVert,
     fragmentShader : pointsFrag,
     uniforms : {
-      shiverProgress : { value : 0.0 },
+      shiverPosition : { value : 0.0 },
+      shiverFade : { value : 0.0 },
       showHighlight : { value : false },
       scale : { value : 1.0 },
       time : { value : 0.0 },
-      frame : { value : 0 },
     },
     transparent : true,
     depthTest : false,
@@ -84,24 +84,8 @@ export default class Snippet {
     this.points = makePoints( flatness );
   }
 
-  set shaderShiverProgress( progress : number ) {
-    ( this.points.material as any ).uniforms.shiverProgress.value = progress;
-  }
-
-  set shaderScale( scale : number ) {
-    ( this.points.material as any ).uniforms.scale.value = scale;
-  }
-
-  set shaderFrame( frame : number ) {
-    ( this.points.material as any ).uniforms.frame.value = frame;
-  }
-
-  set shaderTime( time : number ) {
-    ( this.points.material as any ).uniforms.time.value = time;
-  }
-
-  set shaderShowHighlight( showHighlight : boolean ) {
-    ( this.points.material as any ).uniforms.showHighlight.value = showHighlight;
+  get uniforms() {
+    return ( this.points.material as THREE.RawShaderMaterial ).uniforms;
   }
 
   get displayTime() : Date {

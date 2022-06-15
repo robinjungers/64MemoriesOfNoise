@@ -3,7 +3,6 @@ precision mediump float;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
-uniform float shiverProgress;
 uniform float scale;
 uniform float time;
 uniform float timeMin;

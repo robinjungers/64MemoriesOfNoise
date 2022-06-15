@@ -2,7 +2,7 @@ import { debounce } from 'lodash';
 import * as THREE from 'three';
 import Snippet from './Snippet';
 import SimplexNoise from 'simplex-noise';
-import noiseTexURL from '../images/noise.png?url'
+import noiseTexURL from '../images/noise.jpg?url'
 import quadVert from '../shaders/quad_vert.glsl?raw';
 import bgFrag from '../shaders/bg_frag.glsl?raw';
 import blurFrag from '../shaders/blur_frag.glsl?raw';
@@ -66,7 +66,6 @@ export default class Canvas {
   private simplex : SimplexNoise;
   private pixelSize : THREE.Vector2;
   private snippets : SnippetList;
-  private frame : number = 0;
 
   constructor( snippets : SnippetList, container : HTMLDivElement ) {
     this.snippets = snippets;
@@ -107,7 +106,7 @@ export default class Canvas {
 
     this.simplex = new SimplexNoise();
 
-    window.addEventListener( 'resize', debounce( this.resize.bind( this ), 500 ) );
+    window.addEventListener( 'resize', debounce( this.onResize.bind( this ), 500 ) );
   }
 
   private onSnippetAdded( snippet : Snippet ) {
@@ -118,7 +117,7 @@ export default class Canvas {
     snippet.disposeAndRemoveFromParent();
   }
 
-  private resize() {
+  private onResize() {
     const w = window.innerWidth;
     const h = window.innerHeight;
     this.renderer.setSize( w, h );
@@ -131,16 +130,15 @@ export default class Canvas {
   }
 
   draw( time : number ) {
-    const bgUniforms = ( this.background.material as any ).uniforms;
+    const bgUniforms = ( this.background.material as THREE.RawShaderMaterial ).uniforms;
     bgUniforms.time.value = time;
-    bgUniforms.focusCenter.value.setX( this.simplex.noise2D( 0.0001 * time, 34.8 ) );
-    bgUniforms.focusCenter.value.setY( this.simplex.noise2D( 0.0001 * time, 71.3 ) );
+    bgUniforms.focusCenter.value.setX( this.simplex.noise2D( 0.00015 * time, 34.8 ) );
+    bgUniforms.focusCenter.value.setY( this.simplex.noise2D( 0.00015 * time, 71.3 ) );
 
     this.snippets.forEach( ( snippet : Snippet ) => {
-      snippet.shaderTime = time;
-      snippet.shaderFrame = this.frame;
-      snippet.shaderScale = 1e-3 * this.pixelSize.y;
-      snippet.shaderShowHighlight = false;
+      snippet.uniforms.time.value = time;
+      snippet.uniforms.scale.value = 1e-3 * this.pixelSize.y;
+      snippet.uniforms.showHighlight.value = false;
     } );
 
     this.renderer.setRenderTarget( this.fullTarget );
@@ -150,12 +148,12 @@ export default class Canvas {
 
     this.renderer.setRenderTarget( this.highlightTarget );
     this.renderer.clear();
-    this.snippets.forEach( ( snippet : Snippet ) => void ( snippet.shaderShowHighlight = true ) );
+    this.snippets.forEach( ( snippet : Snippet ) => void ( snippet.uniforms.showHighlight.value = true ) );
     this.renderer.render( this.fullScene, this.camera );
 
     this.renderer.setRenderTarget( this.blurTarget );
     this.renderer.clear();
-    const blurUniforms = ( this.blurQuad.material as any ).uniforms;
+    const blurUniforms = ( this.blurQuad.material as THREE.RawShaderMaterial ).uniforms;
     blurUniforms.tex.value = this.highlightTarget.texture;
     blurUniforms.resolution.value.setX( this.pixelSize.x );
     blurUniforms.resolution.value.setY( this.pixelSize.y );
@@ -163,11 +161,9 @@ export default class Canvas {
 
     this.renderer.setRenderTarget( null );
     this.renderer.clear();
-    const finalUniforms = ( this.finalQuad.material as any ).uniforms;
+    const finalUniforms = ( this.finalQuad.material as THREE.RawShaderMaterial ).uniforms;
     finalUniforms.tex0.value = this.fullTarget.texture;
     finalUniforms.tex1.value = this.blurTarget.texture;
     this.renderer.render( this.finalQuad, this.camera );
-
-    ++ this.frame;
   }
 }

@@ -1,9 +1,9 @@
 #version 300 es
 precision mediump float;
 
-uniform float shiverProgress;
+uniform float shiverPosition;
+uniform float shiverFade;
 uniform float time;
-uniform int frame;
 uniform bool showHighlight;
 
 in float vPosition;
@@ -23,14 +23,6 @@ float lerp( float x, float a, float b, float c, float d )
   return c + ( d - c ) * ( x - a ) / ( b - a );
 }
 
-float envelop( float p )
-{
-  return sin( p * 3.1415 );
-  if ( p < 0.05 ) return lerp( p, 0.0, 0.1, 0.0, 1.0 );
-  if ( p > 0.95 ) return lerp( p, 0.9, 1.0, 1.0, 1.0 );
-  return 1.0;
-}
-
 void main()
 {
   if ( length( gl_PointCoord.xy - 0.5 ) > 0.5 )
@@ -44,7 +36,7 @@ void main()
   if ( showHighlight ) {
     vec4 c0 = vec4( 0.6, 0.3, 0.4, 0.0 );
     vec4 c1 = vec4( 0.5, 0.2, 0.1, a );
-    float f = activate( vPosition, shiverProgress ) * envelop( shiverProgress );
+    float f = activate( vPosition, shiverPosition ) * shiverFade;
     float ff = ( 0.5 + 2.0 * vLevel * vLevel );
     float fff = vLevel > 0.7 ? sin( time ) : 1.0;
   

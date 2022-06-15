@@ -12,8 +12,8 @@ out vec4 color;
 void main()
 {
   float d0 = 2.1 * length( vUv - 0.5 );
-  float d1 = 2.1 * length( vUv - 0.5 + 0.08 * focusCenter );
-  float d2 = 2.1 * length( vUv - 0.5 + 0.16 * focusCenter );
+  float d1 = 2.1 * length( vUv - 0.5 + 0.14 * focusCenter );
+  float d2 = 2.1 * length( vUv - 0.5 + 0.21 * focusCenter );
   
   float n0 = 1.9 * texture( noiseTex, 0.5 * vUv ).r;
   float n1 = 1.0 * texture( noiseTex, 0.8 * vUv ).r;

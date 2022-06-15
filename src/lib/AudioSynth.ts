@@ -49,7 +49,7 @@ export default class AudioSynth {
     this.bgOsc.start();
 
     const clickChannel = this.ctx.createGain();
-    clickChannel.gain.value = 0.5;
+    clickChannel.gain.value = 0.1;
     clickChannel.connect( this.master );
 
     const clickLowpass = this.ctx.createBiquadFilter();
@@ -57,7 +57,7 @@ export default class AudioSynth {
     clickLowpass.frequency.value = 1000;
     createStereoDelay( this.ctx, -0.01, clickLowpass, clickChannel );
 
-    const clickLimiter = new AudioLimiter( this.ctx, 10.0 );
+    const clickLimiter = new AudioLimiter( this.ctx, 2.0 );
     clickLimiter.node.connect( clickLowpass );
 
     this.clickEnv = this.ctx.createGain();

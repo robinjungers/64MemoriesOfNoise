@@ -12,7 +12,7 @@ module.exports = defineConfig( {
     },
   },
   define : {
-    '__NODE_ENV' : process.env.NODE_ENV,
-    '__NODE_PORT' : process.env.NODE_PORT,
+    '__NODE_ENV' : JSON.stringify( process.env.NODE_ENV ),
+    '__NODE_PORT' : JSON.stringify( process.env.NODE_PORT ),
   }
 } );
