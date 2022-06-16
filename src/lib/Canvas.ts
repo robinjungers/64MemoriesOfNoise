@@ -79,7 +79,7 @@ export default class Canvas {
 
     this.renderer = new THREE.WebGLRenderer( { antialias : false } );
     this.renderer.autoClear = false;
-    this.renderer.setPixelRatio( window.devicePixelRatio );
+    this.renderer.setPixelRatio( 1.0 );
     this.renderer.setSize( w, h );
     this.renderer.getDrawingBufferSize( this.pixelSize );
 
@@ -121,7 +121,6 @@ export default class Canvas {
     const w = window.innerWidth;
     const h = window.innerHeight;
     this.renderer.setSize( w, h );
-    this.renderer.setPixelRatio( window.devicePixelRatio );
     this.renderer.getDrawingBufferSize( this.pixelSize );
 
     const ratio = w / h;
@@ -142,7 +141,6 @@ export default class Canvas {
 
     this.snippets.forEach( ( snippet : Snippet ) => {
       snippet.uniforms.time.value = time;
-      snippet.uniforms.scale.value = 1e-3 * this.pixelSize.y;
       snippet.uniforms.showHighlight.value = false;
     } );
 

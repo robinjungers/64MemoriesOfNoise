@@ -50,7 +50,6 @@ function makePoints( flatness : Uint8Array ) : THREE.Points {
       shiverPosition : { value : 0.0 },
       shiverFade : { value : 0.0 },
       showHighlight : { value : false },
-      scale : { value : 1.0 },
       drift : { value : 0.0 },
       time : { value : 0.0 },
     },

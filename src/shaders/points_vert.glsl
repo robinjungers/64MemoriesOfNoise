@@ -3,7 +3,6 @@ precision mediump float;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
-uniform float scale;
 uniform float time;
 uniform float timeMin;
 uniform float timeMax;
@@ -31,9 +30,9 @@ void main()
 
   vUv = vec2( x, y );
 
-  float r0 = showHighlight ? 5.0 : 8.0;
-  float r1 = showHighlight ? 2.0 : 1.0;
+  float r0 = showHighlight ? 10.0 : 16.0;
+  float r1 = showHighlight ? 4.0 : 2.0;
 
-  gl_PointSize = mix( r0, r1, vLevel ) * scale;
+  gl_PointSize = mix( r0, r1, vLevel );
   gl_Position = projectionMatrix * modelViewMatrix * vec4( x, y, 0.0, 1.0 );
 }
