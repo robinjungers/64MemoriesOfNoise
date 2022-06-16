@@ -14,6 +14,7 @@ class App {
   private graph : Graph;
   private isRecording : boolean = false;
   private geoLoc : GeoLoc = new GeoLoc();
+  private audioFlatness : Uint8Array | null = null;
 
   constructor() {
     this.graph = new Graph( document.querySelector( '#graph' ) as HTMLCanvasElement );
@@ -21,6 +22,7 @@ class App {
 
     const appContainer = document.querySelector( '#app' ) as HTMLButtonElement;
     const recordButton = document.querySelector( '#record' ) as HTMLButtonElement;
+    const submitButton = document.querySelector( '#submit' ) as HTMLButtonElement;
 
     Promise.all( [
       this.recorder.request(),
@@ -36,6 +38,18 @@ class App {
       } else {
         await this.startRecording();
         appContainer.classList.toggle( 'recording', true );
+      }
+    } );
+
+    submitButton.addEventListener( 'click', () => {
+      if ( this.audioFlatness ) {
+        this.socket.sendRecording(
+          this.geoLoc.latitude,
+          this.geoLoc.longitude,
+          this.audioFlatness,
+        );
+
+        this.graph.clear();
       }
     } );
   }
@@ -57,16 +71,11 @@ class App {
     const audioData = audioBuffer?.getChannelData( 0 );
     
     if ( audioData ) {
-      const audioFlatness = await this.analyzer.computeFlatness( audioData );
-      const audioFlatnessBytes = floatsToBytes( audioFlatness, 0.0, 1.0 );
+      const audioFlatnessF = await this.analyzer.computeFlatness( audioData );
+      const audioFlatness = floatsToBytes( audioFlatnessF, 0.0, 1.0 );
 
-      this.socket.sendRecording(
-        this.geoLoc.latitude,
-        this.geoLoc.longitude,
-        audioFlatnessBytes,
-      );
-
-      this.graph.draw( audioFlatness );
+      this.audioFlatness = audioFlatness;
+      this.graph.draw( audioFlatnessF );
     }
     
     this.isRecording = false;

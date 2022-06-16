@@ -18,11 +18,27 @@
   pointer-events: all;
   opacity: 1;
 }
-#record
+.buttons
 {
-  background-color: hsl(0, 50%, 60%);
+  display: flex;
+  flex-direction: row;
+}
+.buttons > * + *
+{
+  margin-left: 10px;
+}
+.button
+{
   padding: 5px 10px;
   border-radius: 4px;
+}
+.button#record
+{
+  background-color: hsl(0, 50%, 60%);
+}
+.button#submit
+{
+  background-color: hsl(30, 50%, 60%);
 }
 #app.recording #record
 {

@@ -19,11 +19,18 @@ export default class Graph {
         canvas.style.height = `${h}px`;
     }
 
-    draw( array :  Float32Array ) {
+    clear() {
         const w = this.ctx.canvas.width;
         const h = this.ctx.canvas.height;
 
         this.ctx.clearRect( 0, 0, w, h );
+    }
+
+    draw( array :  Float32Array ) {
+        const w = this.ctx.canvas.width;
+        const h = this.ctx.canvas.height;
+
+        this.clear()
         
         const maxLength = Math.floor( w / 4 );
         const newArray = array.length <= maxLength ? array : shrinkArray( array, maxLength );
