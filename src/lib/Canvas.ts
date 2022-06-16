@@ -141,6 +141,7 @@ export default class Canvas {
 
     this.snippets.forEach( ( snippet : Snippet ) => {
       snippet.uniforms.time.value = time;
+      snippet.uniforms.scale.value = 2e-3 * this.pixelSize.y;
       snippet.uniforms.showHighlight.value = false;
     } );
 
