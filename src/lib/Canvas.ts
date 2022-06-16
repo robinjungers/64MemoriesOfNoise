@@ -121,6 +121,7 @@ export default class Canvas {
     const w = window.innerWidth;
     const h = window.innerHeight;
     this.renderer.setSize( w, h );
+    this.renderer.setPixelRatio( window.devicePixelRatio );
     this.renderer.getDrawingBufferSize( this.pixelSize );
 
     const ratio = w / h;
