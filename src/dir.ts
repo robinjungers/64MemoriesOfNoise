@@ -4,6 +4,7 @@ import { shiverDuration } from './lib/AnimShiver';
 import Snippet from './lib/Snippet';
 import SnippetList from './lib/SnippetList';
 import SocketHandler from './lib/SocketHandler';
+import { coordsToDMS } from './lib/utils';
 
 function formatTimeNumber( num : number ) : string {
   return num.toString().padStart( 2, '0' );
@@ -23,20 +24,6 @@ function formatTime( time : Date ) : string {
   ].join( ':' );
 
   return `${d} ${t}`;
-}
-
-function formatLocationComponent( value : number ) : string {
-  const sign = value < 0 ? '-' : '+';
-  const abs = Math.abs( value ).toFixed( 7 ).padStart( 11, '0' );
-
-  return `${sign}${abs}`;
-}
-
-function formatLocation( latitude : number, longitude : number ) : string {
-  return [
-    formatLocationComponent( latitude ),
-    formatLocationComponent( longitude ),
-  ].join( ',' );
 }
 
 function formatSize( size : number ) : string {
@@ -88,7 +75,7 @@ class App {
 
       const locationElement = document.createElement( 'span' );
       locationElement.classList.add( 'detail', 'detail-location' );
-      locationElement.innerText = formatLocation( snippet.latitude, snippet.longitude );
+      locationElement.innerText = coordsToDMS( snippet.latitude, snippet.longitude );
 
       const sizeElement = document.createElement( 'span' );
       sizeElement.classList.add( 'detail', 'detail-size' );

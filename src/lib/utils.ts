@@ -84,3 +84,26 @@ export function packUint8Array( arrays : ArrayBufferView[] ) : Uint8Array {
 
   return data;
 }
+
+export function padStart0( value : number, size : number ) : string {
+    return value.toString().padStart( size, '0' );
+}
+
+export function coordToDMS( coord : number ) : string {
+    const absolute = Math.abs( coord );
+    const degrees = Math.floor( absolute );
+    const minutesNotTruncated = ( absolute - degrees ) * 60;
+    const minutes = Math.floor( minutesNotTruncated );
+    const seconds = Math.floor( ( minutesNotTruncated - minutes ) * 60 );
+
+    return `${padStart0( degrees, 3 )}°${padStart0( minutes, 2 )}'${padStart0( seconds, 2 )}"`;
+}
+
+export function coordsToDMS( latitude : number, longitude : number ) : string {
+    const dmsLat = coordToDMS( latitude);
+    const dmsLatCardinal = latitude >= 0 ? 'N' : 'S';
+    const dmsLng = coordToDMS( longitude );
+    const dmsLngCardinal = longitude >= 0 ? 'E' : 'W';
+
+    return `${dmsLat}${dmsLatCardinal} ${dmsLng}${dmsLngCardinal}`;;
+}

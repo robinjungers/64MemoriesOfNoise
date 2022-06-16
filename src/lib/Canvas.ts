@@ -127,6 +127,10 @@ export default class Canvas {
     this.camera.left = -ratio;
     this.camera.right = ratio;
     this.camera.updateProjectionMatrix();
+
+    this.fullTarget.setSize( w, h );
+    this.blurTarget.setSize( w, h );
+    this.highlightTarget.setSize( w, h );
   }
 
   draw( time : number ) {
