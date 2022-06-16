@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import * as TWEEN from '@tweenjs/tween.js';
 import pointsVert from '../shaders/points_vert.glsl?raw';
 import pointsFrag from '../shaders/points_frag.glsl?raw';
 import { randFloat, randInt } from 'three/src/math/MathUtils';
@@ -9,6 +10,8 @@ const LANE_COUNT = 64;
 const POINT_COUNT = 1000;
 
 let randomLaneGen = makeRandomChoiceGen( times( LANE_COUNT, i => i ) )
+
+type NumberUniform = THREE.IUniform<number>;
 
 function makePoints( flatness : Uint8Array ) : THREE.Points {
   const sign = 1.0;//randChoice() ? -1.0 : 1.0;
@@ -22,7 +25,7 @@ function makePoints( flatness : Uint8Array ) : THREE.Points {
     const sampleValue = lerp( flatness[sampleIndex], 0, 255, 0.0, 1.0 );
     
     const laneSpan = 1.9 * sampleValue;
-    const ySpan = 0.99;
+    const ySpan = 0.95;
     const y = randFloat(
       lerp( lane - laneSpan, 0, LANE_COUNT - 1, -ySpan, ySpan ),
       lerp( lane + laneSpan, 0, LANE_COUNT - 1, -ySpan, ySpan ),
@@ -48,6 +51,7 @@ function makePoints( flatness : Uint8Array ) : THREE.Points {
       shiverFade : { value : 0.0 },
       showHighlight : { value : false },
       scale : { value : 1.0 },
+      drift : { value : 0.0 },
       time : { value : 0.0 },
     },
     transparent : true,
@@ -68,6 +72,7 @@ export default class Snippet {
   public longitude : number;
   public flatness : Uint8Array;
   public points : THREE.Points;
+  private driftTween : TWEEN.Tween<NumberUniform> | null = null;
 
   constructor(
     id : number,
@@ -86,6 +91,14 @@ export default class Snippet {
 
   get uniforms() {
     return ( this.points.material as THREE.RawShaderMaterial ).uniforms;
+  }
+
+  animateDrift( drift : number ) {
+    this.driftTween?.stop();
+    this.driftTween = new TWEEN.Tween<NumberUniform>( this.uniforms.drift );
+    this.driftTween.to( { value : drift }, 2e3 );
+    this.driftTween.easing( TWEEN.Easing.Quintic.InOut );
+    this.driftTween.start();
   }
 
   get displayTime() : Date {

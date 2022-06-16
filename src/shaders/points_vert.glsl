@@ -7,6 +7,7 @@ uniform float scale;
 uniform float time;
 uniform float timeMin;
 uniform float timeMax;
+uniform float drift;
 uniform bool showHighlight;
 
 in vec3 position;
@@ -23,7 +24,9 @@ void main()
   vPosition = value.x;
   vLevel = inv * inv;
 
-  float x = position.x * exp( 8.0 * ( inv - 1.05 ) ) - 0.2;
+  float f0 = mix( 10.0, 5.0, drift );
+  float f1 = mix( 1.1, 1.05, drift );
+  float x = position.x * exp( f0 * ( inv - f1 ) ) - 0.2;
   float y = position.y;
 
   vUv = vec2( x, y );
